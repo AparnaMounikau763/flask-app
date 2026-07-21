@@ -1,0 +1,15 @@
+{
+  "PYTHON_VERSION": "3.12",
+  "APP_NAME": "flask-app",
+  "IMAGE_NAME": "flask-app",
+  "DOCKER_USERNAME": "aparnamounika",
+  "DOCKER_IMAGE_TAG": "latest",
+  "APP_PORT": "5000",
+  "EC2_HOST": "3.110.44.145",
+  "EC2_USERNAME": "ubuntu",
+  "EC2_PORT": "22",
+  "AWS_REGION": "ap-south-1",
+  "SONAR_HOST_URL": "http://3.110.44.145:9000",
+  "HEALTH_ENDPOINT": "/health",
+  "CONTAINER_NAME": "flask-app"
+}

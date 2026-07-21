@@ -1,0 +1,70 @@
+name: Sync GitHub Variables
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+
+  sync-variables:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Read Variables File
+        id: vars
+        run: |
+          echo "Loading variables.json"
+          cat .github/variables/variables.json
+
+      - name: Sync Variables to GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+
+          FILE=.github/variables/variables.json
+
+          for key in $(jq -r 'keys[]' $FILE)
+          do
+
+            value=$(jq -r --arg k "$key" '.[$k]' $FILE)
+
+            echo "Syncing $key"
+
+            gh api \
+              --method PATCH \
+              -H "Accept: application/vnd.github+json" \
+              /repos/${{ github.repository }}/actions/variables/$key \
+              -f name="$key" \
+              -f value="$value" \
+            ||
+
+            gh api \
+              --method POST \
+              -H "Accept: application/vnd.github+json" \
+              /repos/${{ github.repository }}/actions/variables \
+              -f name="$key" \
+              -f value="$value"
+
+          done
+
+      - name: Display Repository Variables
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+
+          echo "Current Repository Variables"
+
+          gh api \
+          repos/${{ github.repository }}/actions/variables
