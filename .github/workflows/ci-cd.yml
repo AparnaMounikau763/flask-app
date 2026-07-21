@@ -281,12 +281,9 @@ jobs:
               echo "Health check passed"
 
 
+              docker stop ${CONTAINER_NAME}-new || true
 
-              docker stop ${CONTAINER_NAME} || true
-
-
-
-              docker rm ${CONTAINER_NAME} || true
+              echo "Keeping failed container for debugging"
 
 
 
