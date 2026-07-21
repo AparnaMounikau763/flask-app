@@ -3,7 +3,6 @@ name: Python Flask CI/CD Pipeline
 on:
   workflow_dispatch:
 
-
 permissions:
   contents: read
 
@@ -18,6 +17,7 @@ env:
   CONTAINER_NAME: ${{ vars.CONTAINER_NAME }}
   HEALTH_ENDPOINT: ${{ vars.HEALTH_ENDPOINT }}
 
+  
 jobs:
   build-test-scan-deploy:
     runs-on: ubuntu-latest
