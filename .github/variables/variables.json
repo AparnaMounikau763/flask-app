@@ -9,7 +9,6 @@
   "EC2_USERNAME": "ubuntu",
   "EC2_PORT": "22",
   "AWS_REGION": "ap-south-1",
-  "SONAR_HOST_URL": "http://3.110.44.145:9000",
   "HEALTH_ENDPOINT": "/health",
   "CONTAINER_NAME": "flask-app"
 }
