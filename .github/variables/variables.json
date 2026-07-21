@@ -10,5 +10,5 @@
   "EC2_PORT": "22",
   "AWS_REGION": "us-east-1",
   "HEALTH_ENDPOINT": "/health",
-  "CONTAINER_NAME": "flask-app-new"
+  "CONTAINER_NAME": "flask-app"
 }

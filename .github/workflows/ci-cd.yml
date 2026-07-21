@@ -17,7 +17,7 @@ env:
   CONTAINER_NAME: ${{ vars.CONTAINER_NAME }}
   HEALTH_ENDPOINT: ${{ vars.HEALTH_ENDPOINT }}
 
-  
+
 jobs:
   build-test-scan-deploy:
     runs-on: ubuntu-latest
@@ -80,6 +80,14 @@ jobs:
       - name: Push Latest Image
         run: |
           docker push $DOCKER_USERNAME/$IMAGE_NAME:latest
+      - name: Print Variables
+        run: |
+          echo "APP_NAME=$APP_NAME"
+          echo "IMAGE_NAME=$IMAGE_NAME"
+          echo "CONTAINER_NAME=$CONTAINER_NAME"
+          echo "EC2_HOST=$EC2_HOST"
+          echo "AWS_REGION=${{ vars.AWS_REGION }}"
+
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.2
