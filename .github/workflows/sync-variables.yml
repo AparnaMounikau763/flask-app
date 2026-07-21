@@ -3,6 +3,10 @@ name: Sync GitHub Variables
 on:
   workflow_dispatch:
 
+  push:
+    paths:
+      - ".github/variables/variables.json"
+
 permissions:
   contents: read
 
@@ -26,13 +30,11 @@ jobs:
           REPO: ${{ github.event.repository.name }}
 
         run: |
-
           FILE=".github/variables/variables.json"
 
           jq -r 'to_entries[] | "\(.key)=\(.value)"' "$FILE" |
           while IFS='=' read -r KEY VALUE
           do
-
             echo "Syncing $KEY"
 
             STATUS=$(curl \
@@ -45,7 +47,6 @@ jobs:
 
             if [ "$STATUS" = "200" ]
             then
-
               curl \
                 -L \
                 -X PATCH \
@@ -53,9 +54,7 @@ jobs:
                 -H "Accept: application/vnd.github+json" \
                 https://api.github.com/repos/$OWNER/$REPO/actions/variables/$KEY \
                 -d "{\"name\":\"$KEY\",\"value\":\"$VALUE\"}"
-
             else
-
               curl \
                 -L \
                 -X POST \
@@ -63,7 +62,21 @@ jobs:
                 -H "Accept: application/vnd.github+json" \
                 https://api.github.com/repos/$OWNER/$REPO/actions/variables \
                 -d "{\"name\":\"$KEY\",\"value\":\"$VALUE\"}"
-
             fi
-
           done
+
+      - name: Trigger CI/CD Workflow
+        env:
+          GH_TOKEN: ${{ secrets.GH_ADMIN_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+
+        run: |
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            https://api.github.com/repos/$OWNER/$REPO/actions/workflows/ci-cd.yml/dispatches \
+            -d '{
+              "ref":"main"
+            }'
