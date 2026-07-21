@@ -4,16 +4,13 @@ on:
   workflow_dispatch:
 
 permissions:
-  actions: write
+  contents: read
 
 jobs:
-
   sync-variables:
-
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -22,49 +19,51 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq
 
-      - name: Read Variables File
-        id: vars
-        run: |
-          echo "Loading variables.json"
-          cat .github/variables/variables.json
-
-      - name: Sync Variables to GitHub
+      - name: Sync Variables
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GH_ADMIN_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+
         run: |
 
-          FILE=.github/variables/variables.json
+          FILE=".github/variables/variables.json"
 
-          for key in $(jq -r 'keys[]' $FILE)
+          jq -r 'to_entries[] | "\(.key)=\(.value)"' "$FILE" |
+          while IFS='=' read -r KEY VALUE
           do
 
-            value=$(jq -r --arg k "$key" '.[$k]' $FILE)
+            echo "Syncing $KEY"
 
-            echo "Syncing $key"
-
-            gh api \
-              --method PATCH \
+            STATUS=$(curl \
+              -s \
+              -o /dev/null \
+              -w "%{http_code}" \
+              -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
-              /repos/${{ github.repository }}/actions/variables/$key \
-              -f name="$key" \
-              -f value="$value" \
-            ||
+              https://api.github.com/repos/$OWNER/$REPO/actions/variables/$KEY)
 
-            gh api \
-              --method POST \
-              -H "Accept: application/vnd.github+json" \
-              /repos/${{ github.repository }}/actions/variables \
-              -f name="$key" \
-              -f value="$value"
+            if [ "$STATUS" = "200" ]
+            then
+
+              curl \
+                -L \
+                -X PATCH \
+                -H "Authorization: Bearer $GH_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                https://api.github.com/repos/$OWNER/$REPO/actions/variables/$KEY \
+                -d "{\"name\":\"$KEY\",\"value\":\"$VALUE\"}"
+
+            else
+
+              curl \
+                -L \
+                -X POST \
+                -H "Authorization: Bearer $GH_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                https://api.github.com/repos/$OWNER/$REPO/actions/variables \
+                -d "{\"name\":\"$KEY\",\"value\":\"$VALUE\"}"
+
+            fi
 
           done
-
-      - name: Display Repository Variables
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-
-          echo "Current Repository Variables"
-
-          gh api \
-          repos/${{ github.repository }}/actions/variables
